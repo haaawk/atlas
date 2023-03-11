@@ -43,6 +43,8 @@ type (
 
 // DriverName holds the name used for registration.
 const DriverName = "sqlite3"
+// LibsqlDriverName holds the name used for Libsql registration.
+const LibsqlDriverName = "libsql"
 
 func init() {
 	sqlclient.Register(
@@ -57,6 +59,15 @@ func init() {
 				// The "file:" prefix is mandatory for memory modes.
 				uc.DSN = "file:" + uc.DSN
 			}
+			return uc
+		})),
+	)
+	sqlclient.Register(
+		LibsqlDriverName,
+		sqlclient.DriverOpener(Open),
+		sqlclient.RegisterCodec(MarshalHCL, EvalHCL),
+		sqlclient.RegisterURLParser(sqlclient.URLParserFunc(func(u *url.URL) *sqlclient.URL {
+			uc := &sqlclient.URL{URL: u, DSN: "wss://" + strings.TrimPrefix(u.String(), u.Scheme+"://"), Schema: mainFile}
 			return uc
 		})),
 	)
